@@ -1,20 +1,20 @@
 ---
 name: dependabot-review
 description: >
-  Reviews Dependabot gem upgrade pull requests to assess impact, breaking changes, and merge readiness.
-  Works in two modes: (1) single-PR review when the user pastes a Dependabot PR URL, and (2) audit mode
-  that discovers every open Dependabot PR in the current repo, analyzes them one by one, and produces a
-  consolidated triage report. Use this skill whenever the user pastes a Dependabot PR URL, asks to review
-  a dependency upgrade PR, mentions a gem version bump, or wants to know if a Dependabot PR is safe to
-  merge. Also trigger in audit mode when the user says things like "review all open dependabot PRs",
-  "which dependabot PRs are ready to merge", "audit our dep upgrades", "go through the open dep PRs",
-  "check dependabot", or asks for a status/report on pending dependency updates. Trigger on any GitHub
-  PR URL related to dependabot, gem upgrades, or "bump" in the title.
+  Reviews Dependabot dependency upgrade pull requests to assess impact, breaking changes, and merge readiness.
+  Works across ecosystems (npm, RubyGems, PyPI, Go modules, etc.). Works in two modes: (1) single-PR review
+  when the user pastes a Dependabot PR URL, and (2) audit mode that discovers every open Dependabot PR in the
+  current repo, analyzes them one by one, and produces a consolidated triage report. Use this skill whenever
+  the user pastes a Dependabot PR URL, asks to review a dependency upgrade PR, mentions a package version bump,
+  or wants to know if a Dependabot PR is safe to merge. Also trigger in audit mode when the user says things
+  like "review all open dependabot PRs", "which dependabot PRs are ready to merge", "audit our dep upgrades",
+  "go through the open dep PRs", "check dependabot", or asks for a status/report on pending dependency updates.
+  Trigger on any GitHub PR URL related to dependabot, package upgrades, or "bump" in the title.
 ---
 
-# Dependabot Gem Upgrade Review
+# Dependabot Dependency Upgrade Review
 
-Review Dependabot PRs and give the developer a concise, scannable verdict: what changed upstream, what could break (and how to fix it), what each gem touches in the codebase, and whether to merge.
+Review Dependabot PRs and give the developer a concise, scannable verdict: what changed upstream, what could break (and how to fix it), what each package touches in the codebase, and whether to merge. This works across ecosystems — npm, RubyGems, PyPI, Go modules, Cargo, and so on.
 
 ## Choosing a mode
 
@@ -66,7 +66,7 @@ The summary table is the first thing the dev reads — its job is to let them tr
 | Column     | Contents                                                              |
 |------------|-----------------------------------------------------------------------|
 | `#`        | PR number, linked as `[#9170](url)`                                   |
-| `Gem`      | Gem name. For multi-gem PRs, comma-separate (e.g., `rspec-core, rspec-expectations`) |
+| `Package`  | Package name. For multi-package PRs, comma-separate (e.g., `react-dom, react`) |
 | `Bump`     | `old → new` (e.g., `7.2.4 → 8.0.10`)                                  |
 | `Type`     | `patch`, `minor`, or `major`. Prefix with `🔒` if the PR addresses a security advisory |
 | `Age`      | Days since `createdAt` (e.g., `3d`, `21d`)                            |
@@ -96,11 +96,11 @@ gh pr view <NUMBER> --repo <OWNER/REPO> --json title,body,url,files,headRefName
 gh pr diff <NUMBER> --repo <OWNER/REPO>
 ```
 
-From the diff, extract for each gem being updated:
-- **Gem name**, **old version**, **new version**
+From the diff, extract for each package being updated:
+- **Package name**, **old version**, **new version**
 - **Bump type**: patch (0.0.x), minor (0.x.0), or major (x.0.0)
 
-If the PR updates multiple gems, analyze them together in a combined summary with one section per gem.
+If the PR updates multiple packages, analyze them together in a combined summary with one section per package.
 
 ### Step 2: Review Changelog & Breaking Changes
 
@@ -108,15 +108,15 @@ This is the most important step. Developers need to know what changed and whethe
 
 Fetch the changelog between old and new versions. Try these sources:
 
-1. **GitHub changelog** — use `gh` to fetch the raw changelog file from the gem's repo (usually `CHANGELOG.md`, `Changes.md`, or `HISTORY.md` at the repo root)
-2. **GitHub releases** — check `https://github.com/<gem-source-repo>/releases`
-3. **RubyGems.org** — `https://rubygems.org/gems/<gem-name>` links to the source
+1. **GitHub changelog** — use `gh` to fetch the raw changelog file from the package's repo (usually `CHANGELOG.md`, `Changes.md`, or `HISTORY.md` at the repo root)
+2. **GitHub releases** — check `https://github.com/<package-source-repo>/releases`
+3. **Package registry** — the package's registry page usually links to its source repo (npm: `https://www.npmjs.com/package/<name>`, RubyGems: `https://rubygems.org/gems/<name>`, PyPI: `https://pypi.org/project/<name>`)
 
 Focus only on changes between the old and new version. For minor/major bumps, include all intermediate versions.
 
 Organize findings by importance:
 
-1. **Breaking changes** — removed/renamed APIs, changed defaults, dropped Ruby/Rails version support. For each breaking change, check whether the codebase is affected and suggest a concrete fix if so.
+1. **Breaking changes** — removed/renamed APIs, changed defaults, dropped language/runtime/framework version support. For each breaking change, check whether the codebase is affected and suggest a concrete fix if so.
 2. **Deprecations** — still works now, will break later. Note what to watch for.
 3. **Security fixes** — increases urgency to merge.
 4. **Notable bug fixes and new features** — only mention if relevant to the codebase.
@@ -125,14 +125,14 @@ If you cannot find a changelog, say so explicitly.
 
 ### Step 3: Find Codebase Impact
 
-Search the codebase to understand what this gem touches and what's at stake if it breaks.
+Search the codebase to understand what this package touches and what's at stake if it breaks.
 
-1. **Gemfile entry** — check version constraints and which group (`:development`, `:test`, or production).
-2. **Search for usage** — find the gem's module/class names in `app/`, `lib/`, `config/`, and `spec/`. Check `config/initializers/` for configuration.
+1. **Manifest entry** — check the version constraint in the manifest file (`package.json`, `Gemfile`, `requirements.txt`, `go.mod`, etc.) and whether it's a dev/test-only or production dependency.
+2. **Search for usage** — find the package's import/require statements and its module/class/symbol names across the source and test directories. Check configuration or setup files for how it's wired up.
 3. **Map to features** — group files by feature area (payments, notifications, order processing, etc.) and describe what each area does in plain language.
-4. **Ecosystem gems** — check if other gems depend on this one (e.g., `sentry-sidekiq` depends on `sidekiq`). Verify their version constraints are compatible by checking the Gemfile.lock diff — if Bundler resolved successfully, note that.
+4. **Ecosystem packages** — check if other packages depend on this one (e.g., a framework plugin that pins its host framework). Verify their version constraints are compatible by checking the lockfile diff (`package-lock.json`, `yarn.lock`, `Gemfile.lock`, `poetry.lock`, etc.) — if the package manager resolved successfully, note that.
 
-For dev/test-only gems, note the lower risk profile (broken dev workflow vs broken customer experience).
+For dev/test-only packages, note the lower risk profile (broken dev workflow vs broken customer experience).
 
 Keep this section concise: a grouped list of affected areas, not an exhaustive file listing.
 
@@ -165,7 +165,7 @@ After presenting the review in chat, follow the shared **"Posting findings to PR
 The output should be concise and scannable. Use this structure:
 
 ```
-## Dependabot Review: `gem_name` (old_version -> new_version)
+## Dependabot Review: `package_name` (old_version -> new_version)
 
 ### Bump Type
 [patch/minor/major] — [one line: what this means for risk]
@@ -177,13 +177,13 @@ The output should be concise and scannable. Use this structure:
 [Only if there ARE breaking changes: list each one with the affected file and a concrete fix suggestion. If no breaking changes affect the codebase, omit this section entirely.]
 
 ### Codebase Impact
-[Concise grouped list of what this gem touches: "Payments: captures charges via checkoutcom jobs", "Notifications: 12 push/email notification jobs", etc. One line per area.]
+[Concise grouped list of what this package touches: "Payments: captures charges via checkout jobs", "Notifications: 12 push/email notification handlers", etc. One line per area.]
 
 ### Recommendation
 [Verdict + 1-3 sentences explaining why and what to verify]
 ```
 
-For multi-gem PRs, use one top-level heading and a section per gem, then a single combined recommendation at the end.
+For multi-package PRs, use one top-level heading and a section per package, then a single combined recommendation at the end.
 
 In **audit mode**, each per-PR subsection uses the same structure but condensed (aim for 15-25 lines). The top-level summary table and Overall recommendation (defined in the audit workflow) replace the single-PR verdict block.
 
