@@ -1,9 +1,10 @@
 # Dependabot Review Skill (thoughtbot)
 
-A [Claude Code][claude-code] skill that reviews Dependabot gem upgrade pull
-requests to assess impact, breaking changes, and merge readiness — either one
-PR at a time or as a consolidated audit across every open Dependabot PR in the
-repository.
+A [Claude Code][claude-code] skill that reviews Dependabot dependency upgrade
+pull requests to assess impact, breaking changes, and merge readiness — either
+one PR at a time or as a consolidated audit across every open Dependabot PR in
+the repository. It is language-agnostic and works across ecosystems (npm,
+RubyGems, PyPI, Go modules, Cargo, and so on).
 
 [claude-code]: https://docs.anthropic.com/en/docs/claude-code
 [thoughtbot]: https://thoughtbot.com
@@ -11,11 +12,9 @@ repository.
 ## Quick links
 
 - **[Dependabot][dependabot]** - GitHub's automated dependency update tool
-- **[RubyGems.org][rubygems]** - Canonical source for gem metadata and versions
-- **[Keep a Changelog][keepachangelog]** - Changelog conventions used by most gems
+- **[Keep a Changelog][keepachangelog]** - Changelog conventions many projects follow
 
 [dependabot]: https://docs.github.com/en/code-security/dependabot
-[rubygems]: https://rubygems.org
 [keepachangelog]: https://keepachangelog.com
 
 ## Table of contents
@@ -40,8 +39,8 @@ verdict covering:
 - Bump type (patch, minor, major) and what it implies for risk
 - Changelog highlights between the old and new version
 - Breaking changes, deprecations, and security fixes
-- Codebase impact — what the gem touches and which features depend on it
-- Ecosystem compatibility — other gems that depend on the one being bumped
+- Codebase impact — what the package touches and which features depend on it
+- Ecosystem compatibility — other packages that depend on the one being bumped
 - A clear merge recommendation (`Merge`, `Verify`, `Investigate`, or `Hold`)
 
 It works in two modes:
@@ -72,8 +71,8 @@ git clone https://github.com/thoughtbot/dependabot-review-thoughtbot ~/.claude/s
 ## Usage
 
 Invoke the skill inside a Claude Code session. You should be at the root of the
-Rails project whose Dependabot PRs you want to review so the skill can search
-the codebase for gem usage.
+project whose Dependabot PRs you want to review so the skill can search the
+codebase for package usage.
 
 ### Single-PR review
 
@@ -87,7 +86,7 @@ The skill parses the URL, fetches the PR diff, pulls the changelog between the
 old and new version, searches the codebase for usage, and returns a structured
 review.
 
-Trigger phrases that also activate single-PR mode include mentions of a gem
+Trigger phrases that also activate single-PR mode include mentions of a package
 version bump, "is this Dependabot PR safe to merge?", or any GitHub PR URL with
 "bump" in the title.
 
@@ -110,7 +109,7 @@ Or any of the phrases that trigger it directly:
 The skill discovers the PRs via `gh pr list --author "app/dependabot"` — you do
 not need to paste URLs. It produces:
 
-1. A **summary table** (PR number, gem, bump, type, age, verdict, why) sorted
+1. A **summary table** (PR number, package, bump, type, age, verdict, why) sorted
    worklist-style: `Merge → Verify → Investigate → Hold`, with stalest PRs
    rising inside each bucket and security-flagged PRs floated to the top.
 2. A **Details** section with a condensed per-PR review.
@@ -135,15 +134,15 @@ No comment is ever posted without explicit confirmation.
 
 - [`gh`](https://cli.github.com/) CLI installed and authenticated against the
   repository you are auditing (used to list PRs, read diffs, and post comments)
-- A Rails project checkout — the skill greps the codebase to assess impact
-- Network access to fetch changelogs from GitHub and RubyGems.org
+- A project checkout — the skill greps the codebase to assess impact
+- Network access to fetch changelogs from GitHub and package registries
 
 ## Output
 
 Each review follows this structure:
 
 ```
-## Dependabot Review: `gem_name` (old_version -> new_version)
+## Dependabot Review: `package_name` (old_version -> new_version)
 
 ### Bump Type
 [patch/minor/major] — [one line: what this means for risk]
@@ -157,17 +156,17 @@ security fixes, and notable changes.]
 the affected file and a concrete fix suggestion.]
 
 ### Codebase Impact
-[Grouped list of what this gem touches: "Payments: captures
-charges via checkoutcom jobs", etc.]
+[Grouped list of what this package touches: "Payments: captures
+charges via checkout jobs", etc.]
 
 ### Recommendation
 [Merge / Verify / Investigate / Hold, plus 1-3 sentences of
 reasoning and anything a human should verify that CI won't catch.]
 ```
 
-Multi-gem PRs get one section per gem and a single combined recommendation at
-the end. Audit-mode per-PR sections use the same structure but condensed to
-15-25 lines each.
+Multi-package PRs get one section per package and a single combined
+recommendation at the end. Audit-mode per-PR sections use the same structure but
+condensed to 15-25 lines each.
 
 ## Contributing
 
@@ -189,7 +188,7 @@ This skill is open source and available under the [MIT License](LICENSE).
 ![thoughtbot](https://thoughtbot.com/thoughtbot-logo-for-readmes.svg)
 
 This skill was built at [thoughtbot][thoughtbot] to make dependency upgrade
-review faster and more consistent across the Rails projects we maintain.
+review faster and more consistent across the projects we maintain.
 
 The names and logos for thoughtbot are trademarks of thoughtbot, inc.
 
