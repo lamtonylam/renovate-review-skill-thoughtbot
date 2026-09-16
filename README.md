@@ -1,8 +1,8 @@
-# Dependabot Review Skill (thoughtbot)
+# Renovate Review Skill (thoughtbot)
 
-A [Claude Code][claude-code] skill that reviews Dependabot dependency upgrade
+A [Claude Code][claude-code] skill that reviews Renovate dependency upgrade
 pull requests to assess impact, breaking changes, and merge readiness — either
-one PR at a time or as a consolidated audit across every open Dependabot PR in
+one PR at a time or as a consolidated audit across every open Renovate PR in
 the repository. It is language-agnostic and works across ecosystems (npm,
 RubyGems, PyPI, Go modules, Cargo, and so on).
 
@@ -11,10 +11,10 @@ RubyGems, PyPI, Go modules, Cargo, and so on).
 
 ## Quick links
 
-- **[Dependabot][dependabot]** - GitHub's automated dependency update tool
+- **[Renovate][renovate]** - Automated dependency update tool
 - **[Keep a Changelog][keepachangelog]** - Changelog conventions many projects follow
 
-[dependabot]: https://docs.github.com/en/code-security/dependabot
+[renovate]: https://docs.renovatebot.com
 [keepachangelog]: https://keepachangelog.com
 
 ## Table of contents
@@ -33,7 +33,7 @@ RubyGems, PyPI, Go modules, Cargo, and so on).
 
 ## Overview
 
-This skill reviews Dependabot pull requests and produces a concise, scannable
+This skill reviews Renovate pull requests and produces a concise, scannable
 verdict covering:
 
 - Bump type (patch, minor, major) and what it implies for risk
@@ -45,8 +45,8 @@ verdict covering:
 
 It works in two modes:
 
-1. **Single-PR mode** — paste a Dependabot PR URL and get a full review.
-2. **Audit mode** — discover every open Dependabot PR in the current repo,
+1. **Single-PR mode** — paste a Renovate PR URL and get a full review.
+2. **Audit mode** — discover every open Renovate PR in the current repo,
    analyze them one by one, and produce a consolidated triage report sorted by
    ease of merge, with security-flagged PRs floated to the top.
 
@@ -59,24 +59,24 @@ the chat transcript.
 Copy the skill directory to your Claude Code skills folder:
 
 ```bash
-cp -r dependabot-review-thoughtbot ~/.claude/skills/
+cp -r renovate-review-thoughtbot ~/.claude/skills/
 ```
 
 Or clone directly:
 
 ```bash
-git clone https://github.com/thoughtbot/dependabot-review-thoughtbot ~/.claude/skills/dependabot-review-thoughtbot
+git clone git@github.com:lamtonylam/renovate-review-skill-thoughtbot.git ~/.claude/skills/renovate-review-thoughtbot
 ```
 
 ## Usage
 
 Invoke the skill inside a Claude Code session. You should be at the root of the
-project whose Dependabot PRs you want to review so the skill can search the
+project whose Renovate PRs you want to review so the skill can search the
 codebase for package usage.
 
 ### Single-PR review
 
-Paste a Dependabot PR URL (or reference one PR):
+Paste a Renovate PR URL (or reference one PR):
 
 ```
 review https://github.com/my-org/my-app/pull/9170
@@ -87,26 +87,26 @@ old and new version, searches the codebase for usage, and returns a structured
 review.
 
 Trigger phrases that also activate single-PR mode include mentions of a package
-version bump, "is this Dependabot PR safe to merge?", or any GitHub PR URL with
+version bump, "is this Renovate PR safe to merge?", or any GitHub PR URL with
 "bump" in the title.
 
 ### Audit mode
 
-Audit every open Dependabot PR in the current repo:
+Audit every open Renovate PR in the current repo:
 
 ```
-/dependabot-review-thoughtbot
+/renovate-review-thoughtbot
 ```
 
 Or any of the phrases that trigger it directly:
 
-- "review all open dependabot PRs"
-- "which dependabot PRs are ready to merge"
+- "review all open renovate PRs"
+- "which renovate PRs are ready to merge"
 - "audit our dep upgrades"
 - "go through the open dep PRs"
-- "check dependabot"
+- "check renovate"
 
-The skill discovers the PRs via `gh pr list --author "app/dependabot"` — you do
+The skill discovers the PRs via `gh pr list --author "app/renovate"` — you do
 not need to paste URLs. It produces:
 
 1. A **summary table** (PR number, package, bump, type, age, verdict, why) sorted
@@ -142,7 +142,7 @@ No comment is ever posted without explicit confirmation.
 Each review follows this structure:
 
 ```
-## Dependabot Review: `package_name` (old_version -> new_version)
+## Renovate Review: `package_name` (old_version -> new_version)
 
 ### Bump Type
 [patch/minor/major] — [one line: what this means for risk]

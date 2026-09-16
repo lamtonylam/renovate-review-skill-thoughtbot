@@ -1,45 +1,45 @@
 ---
-name: dependabot-review
+name: renovate-review
 description: >
-  Reviews Dependabot dependency upgrade pull requests to assess impact, breaking changes, and merge readiness.
-  Works across ecosystems (npm, RubyGems, PyPI, Go modules, etc.). Works in two modes: (1) single-PR review
-  when the user pastes a Dependabot PR URL, and (2) audit mode that discovers every open Dependabot PR in the
+  Reviews Renovate dependency upgrade pull requests to assess impact, breaking changes, and merge readiness.
+  Works across ecosystems (npm, RubyGems, PyPI, Go modules, Cargo, etc.). Works in two modes: (1) single-PR review
+  when the user pastes a Renovate PR URL, and (2) audit mode that discovers every open Renovate PR in the
   current repo, analyzes them one by one, and produces a consolidated triage report. Use this skill whenever
-  the user pastes a Dependabot PR URL, asks to review a dependency upgrade PR, mentions a package version bump,
-  or wants to know if a Dependabot PR is safe to merge. Also trigger in audit mode when the user says things
-  like "review all open dependabot PRs", "which dependabot PRs are ready to merge", "audit our dep upgrades",
-  "go through the open dep PRs", "check dependabot", or asks for a status/report on pending dependency updates.
-  Trigger on any GitHub PR URL related to dependabot, package upgrades, or "bump" in the title.
+  the user pastes a Renovate PR URL, asks to review a dependency upgrade PR, mentions a package version bump,
+  or wants to know if a Renovate PR is safe to merge. Also trigger in audit mode when the user says things
+  like "review all open renovate PRs", "which renovate PRs are ready to merge", "audit our dep upgrades",
+  "go through the open dep PRs", "check renovate", or asks for a status/report on pending dependency updates.
+  Trigger on any GitHub PR URL related to renovate, package upgrades, or "bump" in the title.
 ---
 
-# Dependabot Dependency Upgrade Review
+# Renovate Dependency Upgrade Review
 
-Review Dependabot PRs and give the developer a concise, scannable verdict: what changed upstream, what could break (and how to fix it), what each package touches in the codebase, and whether to merge. This works across ecosystems — npm, RubyGems, PyPI, Go modules, Cargo, and so on.
+Review Renovate PRs and give the developer a concise, scannable verdict: what changed upstream, what could break (and how to fix it), what each package touches in the codebase, and whether to merge. This works across ecosystems — npm, RubyGems, PyPI, Go modules, Cargo, and so on.
 
 ## Choosing a mode
 
 Pick the mode based on what the user asked for:
 
-- **Single-PR mode** — the user pasted a specific Dependabot PR URL or otherwise referenced one PR. Run the single-PR workflow below.
-- **Audit mode** — the user asked about *all* open Dependabot PRs (phrases like "audit our deps", "review open dependabot PRs", "which dep upgrades are safe to merge"). Run the audit workflow. Do **not** ask the user to paste URLs — discover them with `gh`.
+- **Single-PR mode** — the user pasted a specific Renovate PR URL or otherwise referenced one PR. Run the single-PR workflow below.
+- **Audit mode** — the user asked about *all* open Renovate PRs (phrases like "audit our deps", "review open renovate PRs", "which dep upgrades are safe to merge"). Run the audit workflow. Do **not** ask the user to paste URLs — discover them with `gh`.
 
-If the intent is ambiguous (e.g., "review dependabot"), default to audit mode since it's the superset and shows what's available.
+If the intent is ambiguous (e.g., "review renovate"), default to audit mode since it's the superset and shows what's available.
 
 ## Audit workflow (multiple PRs)
 
-### Step A1: Discover open Dependabot PRs
+### Step A1: Discover open Renovate PRs
 
-Determine the repo from the current working directory (`gh repo view --json nameWithOwner -q .nameWithOwner`). Then list open Dependabot PRs:
+Determine the repo from the current working directory (`gh repo view --json nameWithOwner -q .nameWithOwner`). Then list open Renovate PRs:
 
 ```bash
-gh pr list --author "app/dependabot" --state open \
+gh pr list --author "app/renovate" --state open \
   --json number,title,url,createdAt,headRefName,labels \
   --limit 50
 ```
 
-The `app/` prefix in the author filter is required — Dependabot authors as the bot account `app/dependabot`. If `gh` returns an empty list, tell the user "No open Dependabot PRs in <repo>." and stop.
+The `app/` prefix in the author filter is required — Renovate authors as the bot account `app/renovate`. If `gh` returns an empty list, tell the user "No open Renovate PRs in <repo>." and stop.
 
-Before diving into analysis, surface the scope to the user in one line: "Found N open Dependabot PRs. Analyzing each now…" — this sets expectations when there are many to crunch through.
+Before diving into analysis, surface the scope to the user in one line: "Found N open Renovate PRs. Analyzing each now…" — this sets expectations when there are many to crunch through.
 
 ### Step A2: Analyze each PR
 
@@ -50,7 +50,7 @@ You can fetch independent PRs in parallel where the tool call structure allows i
 ### Step A3: Produce the consolidated report
 
 Emit the report in this order:
-1. A short preamble: "Reviewed N open Dependabot PRs in <repo>."
+1. A short preamble: "Reviewed N open Renovate PRs in <repo>."
 2. A **summary table** (see the "Audit summary table" section below for the shape).
 3. A **Details** section with one subsection per PR, each following the single-PR output format (but condensed — keep per-PR detail to ~15-25 lines).
 4. A closing **Overall recommendation** block: which PRs to merge now, which to investigate, which to hold. Group by verdict so the dev can work top-to-bottom.
@@ -165,7 +165,7 @@ After presenting the review in chat, follow the shared **"Posting findings to PR
 The output should be concise and scannable. Use this structure:
 
 ```
-## Dependabot Review: `package_name` (old_version -> new_version)
+## Renovate Review: `package_name` (old_version -> new_version)
 
 ### Bump Type
 [patch/minor/major] — [one line: what this means for risk]
@@ -216,7 +216,7 @@ Use `--body-file` rather than `--body` so newlines, backticks, and markdown tabl
 Use this exact structure per PR:
 
 ```markdown
-## Dependabot review
+## Renovate review
 
 **Verdict:** <Merge / Verify / Investigate / Hold>
 
@@ -229,13 +229,13 @@ Use this exact structure per PR:
 
 </details>
 
-<!-- dependabot-audit:v1 -->
+<!-- renovate-audit:v1 -->
 ```
 
 Rationale for each element:
 - The verdict and one-liner sit above the fold so a teammate scrolling the PR timeline can triage without expanding.
 - The `<details>` block keeps the long analysis collapsed — PR comments that dump 40 lines of unrequested content are noisy and get ignored.
-- The trailing `<!-- dependabot-audit:v1 -->` HTML comment is invisible in the rendered view but lets a future run detect its own prior comment and decide whether to skip or update instead of duplicating.
+- The trailing `<!-- renovate-audit:v1 -->` HTML comment is invisible in the rendered view but lets a future run detect its own prior comment and decide whether to skip or update instead of duplicating.
 - **Do not** add any signature, "posted by", "generated by", or attribution line. The comment should read as if written by the user who posted it.
 
 ### Idempotency check
@@ -243,7 +243,7 @@ Rationale for each element:
 Before posting to any PR, run:
 
 ```bash
-gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | grep -q 'dependabot-audit:v1'
+gh pr view <NUMBER> --repo <OWNER/REPO> --json comments --jq '.comments[].body' | grep -q 'renovate-audit:v1'
 ```
 
 If the marker is found, a prior review comment already exists. Mention it in the confirmation prompt ("PR #9170 already has a prior review comment — re-post anyway?") so the user can choose to skip, replace (delete the old comment via `gh api --method DELETE /repos/<owner>/<repo>/issues/comments/<id>` and post new), or leave it alone. Default to skipping if the user doesn't specify.
